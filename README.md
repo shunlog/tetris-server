@@ -77,6 +77,45 @@ The APIs will accept HTTP requests with JSON bodies (mis-termed REST).
 Through the Websocket will be sent every action of the player (key presses and releases).
 When someone joins a lobby that's already running, he will first receive all the past events to reconstruct the game state, and then will receive updates as they happen.
 
+
+The user needs to send:
+- confirmation of game start, along with his local start timestamp
+- key presses and releases
+- heartbeats, to let the server know when a connection is lost
+
+Every message will have a timestamp, which will be relative to the first "starting" timestamp sent by each user.
+This makes sense because every user is playing his own game, so all the input events should be precise on his machine, which means they won't necessarily be synchronized.
+```
+0 start
+100 heartbeat
+200 heartbeat
+...
+1465 left press
+...
+2084 space press
+...
+2284 space release
+...
+3458 left release
+```
+
+The server needs to send each client:
+- the key events of their opponents
+- when an opponent gets disconnected or reconnects
+```
+1058 player0 left press
+...
+54848 player1 disconnected
+55211 player1 reconnected
+...
+
+```
+
+Since the game is deterministic, and the state can be recreated from the past events,
+there is no need to send information about cleared lines, game over or score;
+every client will recalculate their opponents' states from their inputs.
+
+
 ## Deployment & Scaling
 
 Docker with Docker Compose.
